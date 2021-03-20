@@ -34,13 +34,7 @@ class CardsCoinsSerializer(ModelSerializer):
 
 
 class AuthSerializer(TokenObtainPairSerializer):
-    phone_regex = re.compile(r'\+7\d{10}')
-
     def validate(self, attrs):
-        username = attrs[self.username_field]
-        if not AuthSerializer.phone_regex.match(username):
-            raise ValidationError('Username should be a phone number')
-
         data = super(AuthSerializer, self).validate(attrs)
         data['registered'] = False
         data['cards'] = []
