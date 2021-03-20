@@ -119,18 +119,15 @@ class StopFindBattleSerializer(StartFindBattleSerializer):
 
 class MatchPostRequestSerializer(Serializer):
     max_delta = IntegerField(min_value=0)
-    user_id = IntegerField(min_value=1)
 
     def validate(self, attrs):
-        user_id = attrs['user_id']
-        if not BattleRequest.objects.filter(
-                card__owner__cards_user_id=user_id).exists():
+        user = self.context['user']
+        if not BattleRequest.objects.filter(card__owner=user).exists():
             raise ValidationError("There is no battle request with you")
         return attrs
 
 
 class StartBattleRequestSerializer(Serializer):
-    user_id = IntegerField(min_value=1)
     battle_id = IntegerField(min_value=1)
     mini_game_choice = IntegerField()
 
@@ -148,10 +145,9 @@ class StartBattleRequestSerializer(Serializer):
         return mini_game_choice
 
     def validate(self, attrs):
-        user_id = attrs['user_id']
+        user = self.context['user']
         battle = Battle.objects.get(battle_id=attrs['battle_id'])
-        if user_id not in [battle.first_card.owner.cards_user_id,
-                           battle.second_card.owner.cards_user_id]:
+        if user not in [battle.first_card.owner, battle.second_card.owner]:
             raise ValidationError("You did not join this battle")
         return attrs
 

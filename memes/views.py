@@ -71,9 +71,9 @@ class StopFindBattleView(APIView):
 
 class MatchBattleView(APIView):
     def post(self, request):
-        serializer = MatchPostRequestSerializer(data={
-            'user_id': request.user.cardsuser.cards_user_id, **request.data
-        })
+        serializer = MatchPostRequestSerializer(
+            data=request.data, context={'user': request.user.cardsuser}
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         max_delta = serializer.data['max_delta']
@@ -108,9 +108,9 @@ class MatchBattleView(APIView):
 
 class StartBattleView(APIView):
     def post(self, request):
-        serializer = StartBattleRequestSerializer(data={
-            'user_id': request.user.cardsuser.cards_user_id, **request.data
-        })
+        serializer = StartBattleRequestSerializer(
+            data=request.data, context={'user': request.user.cardsuser}
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
@@ -217,7 +217,6 @@ class MyCreatorsLeaderboardView(MyLeaderboardView):
 
 class LikeCardView(APIView):
     def post(self, request):
-        # TODO везде поставить контекст
         serializer = getattr(self, 'request_serializer')(
             data=request.data, context={'user': request.user.cardsuser}
         )
