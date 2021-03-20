@@ -27,7 +27,21 @@ class CardsUser(models.Model):
 
     @property
     def creator_rank(self):
-        return 'TODO'  # TODO
+        rating = self.creator_rating
+        if rating <= 10:
+            return 'Юзер'
+        elif rating <= 50:
+            return 'Младший мемодел'
+        elif rating <= 200:
+            return 'Мемодел'
+        elif rating <= 500:
+            return 'Уважаемый Мемодел'
+        elif rating <= 1000:
+            return 'Старший Мемодел'
+        elif rating <= 5000:
+            return 'Генерал Мемов'
+        else:
+            return 'Повелитель Мемов'
 
     @classmethod
     def register(cls, username, password):
