@@ -271,3 +271,9 @@ class CreateCardView(APIView):
             creator=request.user.cardsuser, image_url=url
         )
         return Response(CardDesignSerializer(card_design).data)
+
+
+class CardsView(APIView):
+    def get(self, request):
+        return Response(CardSerializer(request.user.cardsuser.card_set,
+                                       many=True))
