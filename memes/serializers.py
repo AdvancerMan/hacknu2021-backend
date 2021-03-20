@@ -52,9 +52,11 @@ class AuthSerializer(TokenObtainPairSerializer):
 
 
 class CardDesignSerializer(ModelSerializer):
+    creator = CardsUserSerializer()
+
     class Meta:
         model = CardDesign
-        fields = ['card_design_id', 'image_url', 'popularity']
+        fields = ['creator', 'card_design_id', 'image_url', 'popularity']
 
 
 class CardSerializer(ModelSerializer):

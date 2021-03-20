@@ -57,6 +57,7 @@ class CardsUser(models.Model):
 
 
 class CardDesign(models.Model):
+    creator = models.ForeignKey(CardsUser, null=True, on_delete=models.SET_NULL)
     card_design_id = models.BigAutoField(primary_key=True)
     image_url = models.URLField()
     popularity = models.IntegerField(choices=[
