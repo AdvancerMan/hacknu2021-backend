@@ -11,8 +11,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from memes.models import CardsUser, BattleRequest, Battle
 from memes.serializers import (
     AuthSerializer, CardSerializer, StartFindBattleSerializer,
-    StopFindBattleSerializer,
-    MatchPostRequestSerializer, BattleSerializer, StartBattleRequestSerializer,
+    StopFindBattleSerializer, MatchPostRequestSerializer, BattleSerializer,
+    CardsCoinsSerializer, StartBattleRequestSerializer,
     BattleResultsRequestSerializer, BattleResultSerializer
 )
 
@@ -35,6 +35,15 @@ class AuthView(TokenObtainPairView):
                 user.card_set, many=True
             ).data
             return response
+
+class EverydayRewardView(APIView):
+    def post(self):
+        serializer = CardsCoinsSerializer()
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        CardsUser.everyday_login_reward()
+
 
 
 class StartFindBattleView(APIView):
