@@ -1,14 +1,14 @@
+import pytz
 import random
 
 from django.db import models
 from rest_framework.exceptions import server_error
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 from hacknu.settings import IMAGE_STORAGE_KEY
-from rest_framework.exceptions import ValidationError
 import requests
 import json
 import datetime
+
 
 class CardsUser(models.Model):
     cards_user_id = models.BigAutoField(primary_key=True)
@@ -19,6 +19,8 @@ class CardsUser(models.Model):
 
     battle_count = models.PositiveIntegerField(default=0)
     win_count = models.PositiveIntegerField(default=0)
+
+    last_everyday_reward = models.DateTimeField()
 
     @property
     def creator_rank(self):
@@ -34,11 +36,18 @@ class CardsUser(models.Model):
         cards_user.add_intro_reward()
         return cards_user
 
-    def everyday_login_reward(self):
-        self.coins+=200
-        self.save()
+    def try_add_everyday_reward(self):
+        if (datetime.datetime.now(pytz.utc) - datetime.timedelta(days=1)
+                > self.last_everyday_reward):
+            self.last_everyday_reward = datetime.datetime.now(pytz.utc)
+            self.coins += 200
+            self.save()
+            return 200, []
+        else:
+            return 0, []
 
     def add_intro_reward(self):
+        self.last_everyday_reward = datetime.datetime.now(pytz.utc)
         self.coins += 100
         # TODO add cards
         # self.card_set.add(

@@ -36,14 +36,11 @@ class AuthView(TokenObtainPairView):
             ).data
             return response
 
+
 class EverydayRewardView(APIView):
-    def post(self):
-        serializer = CardsCoinsSerializer()
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
-
-        CardsUser.everyday_login_reward()
-
+    def post(self, request):
+        result = request.user.cardsuser.try_add_everyday_reward()
+        return Response(CardsCoinsSerializer(result).data)
 
 
 class StartFindBattleView(APIView):

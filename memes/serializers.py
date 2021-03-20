@@ -17,10 +17,21 @@ class CardsUserSerializer(ModelSerializer):
         fields = ['cards_user_id', 'coins', 'battle_rating',
                   'creator_rating', 'creator_rank']
 
+
 class CardsCoinsSerializer(ModelSerializer):
+    coins = SerializerMethodField()
+    cards = SerializerMethodField()
+
+    def get_cards(self, coins_cards):
+        return CardSerializer(coins_cards[1], many=True).data
+
+    def get_coins(self, coins_cards):
+        return coins_cards[0]
+
     class Meta:
         model = CardsUser
-        fields = ['coins']
+        fields = ['coins', 'cards']
+
 
 class AuthSerializer(TokenObtainPairSerializer):
     phone_regex = re.compile(r'\+7\d{10}')
@@ -38,10 +49,6 @@ class AuthSerializer(TokenObtainPairSerializer):
             CardsUser.objects.get(user__username=attrs[self.username_field])
         ).data
         return data
-
-class EverydayRewardSerializer(ModelSerializer):
-    def reward_everyday(self):
-        data_output['coins'] = CardsCoinsSerializer()
 
 
 class CardDesignSerializer(ModelSerializer):
