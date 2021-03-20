@@ -14,8 +14,8 @@ from memes.models import Card, Battle, CardDesign, CardsUser, BattleRequest
 class CardsUserSerializer(ModelSerializer):
     class Meta:
         model = CardsUser
-        fields = ['cards_user_id', 'coins', 'battle_rating',
-                  'creator_rating', 'creator_rank']
+        fields = ['cards_user_id', 'coins', 'battle_rating', 'creator_rating',
+                  'creator_rank', 'first_name', 'last_name']
 
 
 class CardsCoinsSerializer(ModelSerializer):

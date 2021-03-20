@@ -43,12 +43,24 @@ class CardsUser(models.Model):
         else:
             return 'Повелитель Мемов'
 
+    @property
+    def first_name(self):
+        return self.user.first_name
+
+    @property
+    def last_name(self):
+        return self.user.last_name
+
     @classmethod
-    def register(cls, username, password):
+    def register(cls, username, password, first_name, last_name):
         user = User.objects.create_user(
             username=username,
             password=password,
         )
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+
         cards_user = CardsUser.objects.create(user=user)
         cards_user.add_intro_reward()
         return cards_user

@@ -33,8 +33,11 @@ class AuthView(TokenObtainPairView):
         except AuthenticationFailed:
             if User.objects.filter(username=request.data['username']).exists():
                 raise
-            user = CardsUser.register(request.data['username'],
-                                      request.data['password'])
+            user = CardsUser.register(
+                request.data['username'], request.data['password'],
+                request.data.get('first_name', ''),
+                request.data.get('second_name', '')
+            )
             response = super(AuthView, self).post(request, *args, **kwargs)
             response.data['registered'] = True
             response.data['coins'] = user.coins
