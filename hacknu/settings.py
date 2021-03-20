@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'testapp',
+    'memes',
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+IMAGE_STORAGE_KEY = os.getenv('IMAGE_STORAGE_KEY')
