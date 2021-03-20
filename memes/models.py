@@ -5,13 +5,14 @@ from django.db import models
 from django.contrib.auth.models import User
 import datetime
 
+from django.db.models import Count
+
 
 class CardsUser(models.Model):
     cards_user_id = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     coins = models.PositiveIntegerField(default=0)
     battle_rating = models.IntegerField(default=0)
-    creator_rating = models.IntegerField(default=0)
 
     battle_count = models.PositiveIntegerField(default=0)
     win_count = models.PositiveIntegerField(default=0)
@@ -19,6 +20,10 @@ class CardsUser(models.Model):
     last_everyday_reward = models.DateTimeField(default=datetime.datetime(
         1, 1, 1, tzinfo=pytz.utc
     ))
+
+    @property
+    def creator_rating(self):
+        return self.carddesign_set.aggregate(rating=Count('likes'))['rating']
 
     @property
     def creator_rank(self):
@@ -113,19 +118,21 @@ class Battle(models.Model):
             self.winner = second
         self.coins_prize = random.randint(40, 80)
         self.card_prize = None  # TODO card prize
-        winner_power_prize = 50
-        looser_power_prize = 10
+        winner_power_prize = random.randint(40, 60)
+        looser_power_prize = random.randint(8, 12)
 
         if self.winner == first:
-            self.first_power_prize = winner_power_prize
-            self.second_power_prize = looser_power_prize
+            self.first_power_prize = winner_power_prize * self.first_card.rarity
+            self.second_power_prize = (looser_power_prize
+                                       * self.second_card.rarity)
 
             # TODO improve rating system
             self.first_delta_rating = 1
             self.second_delta_rating = -1
         else:
-            self.first_power_prize = looser_power_prize
-            self.second_power_prize = winner_power_prize
+            self.first_power_prize = looser_power_prize * self.first_card.rarity
+            self.second_power_prize = (winner_power_prize
+                                       * self.second_card.rarity)
 
             self.first_delta_rating = -1
             self.second_delta_rating = 1

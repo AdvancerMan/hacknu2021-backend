@@ -267,8 +267,6 @@ class CreateCardView(APIView):
             ]}, status=response.status_code)
 
         url = imgbb_response['data']['url']
-        url = url.replace('https:', '').replace('http:', '')
-
         card_design = CardDesign.objects.create(
             creator=request.user.cardsuser, image_url=url
         )
