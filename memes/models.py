@@ -80,3 +80,7 @@ class Battle(models.Model):
     @property
     def finished(self):
         return self.winner is None
+
+
+class BattleRequest(models.Model):
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
