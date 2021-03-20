@@ -1,8 +1,11 @@
+import re
+
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import (
     Serializer, IntegerField, ModelSerializer
 )
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from memes.models import Card, Battle, CardDesign, CardsUser
 
@@ -10,8 +13,26 @@ from memes.models import Card, Battle, CardDesign, CardsUser
 class CardsUserSerializer(ModelSerializer):
     class Meta:
         model = CardsUser
-        fields = ['user_id', 'coins', 'battle_rating',
+        fields = ['cards_user_id', 'coins', 'battle_rating',
                   'creator_rating', 'creator_rank']
+
+
+class AuthSerializer(TokenObtainPairSerializer):
+    phone_regex = re.compile(r'\+7\d{10}')
+
+    def validate(self, attrs):
+        username = attrs[self.username_field]
+        if not AuthSerializer.phone_regex.match(username):
+            raise ValidationError('Username should be a phone number')
+
+        data = super(AuthSerializer, self).validate(attrs)
+        data['registered'] = False
+        data['cards'] = []
+        data['coins'] = 0
+        data['user'] = CardsUserSerializer(
+            CardsUser.objects.get(user__username=attrs[self.username_field])
+        ).data
+        return data
 
 
 class CardDesignSerializer(ModelSerializer):

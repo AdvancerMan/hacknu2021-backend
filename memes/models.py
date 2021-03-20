@@ -8,22 +8,40 @@ import json
 
 
 class CardsUser(models.Model):
-    cards_user_id = models.PositiveIntegerField(primary_key=True)
+    cards_user_id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coins = models.PositiveIntegerField()
-    battle_rating = models.IntegerField()
-    creator_rating = models.IntegerField()
+    coins = models.PositiveIntegerField(default=0)
+    battle_rating = models.IntegerField(default=0)
+    creator_rating = models.IntegerField(default=0)
 
-    battle_count = models.PositiveIntegerField()
-    win_count = models.PositiveIntegerField()
+    battle_count = models.PositiveIntegerField(default=0)
+    win_count = models.PositiveIntegerField(default=0)
 
     @property
     def creator_rank(self):
         return 'TODO'  # TODO
 
+    @classmethod
+    def register(cls, username, password):
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+        )
+        cards_user = CardsUser.objects.create(user=user)
+        cards_user.add_intro_reward()
+        return cards_user
+
+    def add_intro_reward(self):
+        self.coins += 100
+        # TODO add cards
+        # self.card_set.add(
+        #
+        # )
+        self.save()
+
 
 class CardDesign(models.Model):
-    card_design_id = models.PositiveIntegerField(primary_key=True)
+    card_design_id = models.BigAutoField(primary_key=True)
     image_url = models.URLField()
     popularity = models.TextField(choices=[
         (1, 'Обычная'),
@@ -44,7 +62,7 @@ class CardDesign(models.Model):
 
 
 class Card(models.Model):
-    card_id = models.PositiveIntegerField(primary_key=True)
+    card_id = models.BigAutoField(primary_key=True)
     strength = models.PositiveIntegerField()
     rarity = models.PositiveIntegerField()
     design = models.ForeignKey(CardDesign, on_delete=models.PROTECT)
@@ -52,7 +70,7 @@ class Card(models.Model):
 
 
 class Battle(models.Model):
-    battle_id = models.PositiveIntegerField(primary_key=True)
+    battle_id = models.BigAutoField(primary_key=True)
     winner = models.ForeignKey(CardsUser, null=True, on_delete=models.PROTECT)
     first_card = models.ForeignKey(Card, on_delete=models.PROTECT,
                                    related_name='battles1')
