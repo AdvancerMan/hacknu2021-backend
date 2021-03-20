@@ -1,8 +1,8 @@
 import random
 
 from django.contrib.auth.models import User
-from django.db.models import F
-from django.db.models.functions import Abs
+from django.db.models import F, Q
+from django.db.models.functions import Abs, RowNumber
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,7 +13,9 @@ from memes.serializers import (
     AuthSerializer, CardSerializer, StartFindBattleSerializer,
     StopFindBattleSerializer, MatchPostRequestSerializer, BattleSerializer,
     CardsCoinsSerializer, StartBattleRequestSerializer,
-    BattleResultsRequestSerializer, BattleResultSerializer
+    BattleResultsRequestSerializer, BattleResultSerializer,
+    LeaderboardRequestSerializer, BattleLeaderSerializer,
+    MyLeaderboardRequestSerializer, CardCreatorLeaderSerializer
 )
 
 
@@ -148,3 +150,64 @@ class BattleResultsView(APIView):
                 ).data
             }
         )
+
+
+class LeaderboardView(APIView):
+    def get_leaders(self, start, count):
+        if start < 0:
+            count += start
+            start = 0
+
+        leaders = CardsUser.objects.order_by(
+            '-battle_rating', 'cards_user_id'
+        )[start:start + count]
+        return Response({
+            'leaders': getattr(self, 'leaders_serializer')(
+                leaders, many=True
+            ).data
+        })
+
+    def get(self, request):
+        serializer = LeaderboardRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        start = serializer.data['start']
+        count = serializer.data['count']
+        return self.get_leaders(start, count)
+
+
+class MyLeaderboardView(LeaderboardView):
+    def get(self, request):
+        serializer = MyLeaderboardRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        user = request.user.cardsuser
+        distance = serializer.data['distance']
+        ordering_field_name = getattr(self, 'ordering_field')
+        ordering_field = getattr(user, ordering_field_name)
+        index = CardsUser.objects.filter(
+            Q(**{ordering_field_name + '__gt': ordering_field})
+            | Q(**{ordering_field_name: ordering_field})
+            & Q(cards_user_id__lt=user.cards_user_id)
+        ).count()
+        return self.get_leaders(index - distance, 2 * distance + 1)
+
+
+class BattleLeaderboardView(LeaderboardView):
+    leaders_serializer = BattleLeaderSerializer
+
+
+class MyBattleLeaderboardView(MyLeaderboardView):
+    leaders_serializer = BattleLeaderSerializer
+    ordering_field = 'battle_rating'
+
+
+class CreatorsLeaderboardView(LeaderboardView):
+    leaders_serializer = CardCreatorLeaderSerializer
+
+
+class MyCreatorsLeaderboardView(MyLeaderboardView):
+    leaders_serializer = CardCreatorLeaderSerializer
+    ordering_field = 'creator_rating'

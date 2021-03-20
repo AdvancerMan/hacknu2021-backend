@@ -197,3 +197,38 @@ class BattleResultSerializer(ModelSerializer):
         model = Battle
         fields = ['winner', 'coins_prize', 'power_prize',
                   'card_prize', 'delta_rating']
+
+
+class LeaderboardRequestSerializer(Serializer):
+    start = IntegerField(min_value=0)
+    count = IntegerField(min_value=1)
+
+
+class MyLeaderboardRequestSerializer(Serializer):
+    distance = IntegerField(min_value=0)
+
+
+class BattleLeaderSerializer(ModelSerializer):
+    user = SerializerMethodField()
+
+    def get_user(self, user):
+        return CardsUserSerializer(user).data
+
+    class Meta:
+        model = CardsUser
+        fields = ['user', 'battle_count', 'win_count']
+
+
+class CardCreatorLeaderSerializer(ModelSerializer):
+    user = SerializerMethodField()
+    cards_amount = SerializerMethodField()
+
+    def get_user(self, user):
+        return CardsUserSerializer(user).data
+
+    def get_cards_amount(self, user):
+        return user.carddesign_set.count()
+
+    class Meta:
+        model = CardsUser
+        fields = ['user', 'cards_amount']
