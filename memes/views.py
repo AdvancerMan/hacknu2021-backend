@@ -2,20 +2,21 @@ import random
 
 from django.contrib.auth.models import User
 from django.db.models import F, Q
-from django.db.models.functions import Abs, RowNumber
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from django.db.models.functions import Abs
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from memes.models import CardsUser, BattleRequest, Battle
+from memes.models import CardsUser, BattleRequest, Battle, CardDesign
 from memes.serializers import (
     AuthSerializer, CardSerializer, StartFindBattleSerializer,
     StopFindBattleSerializer, MatchPostRequestSerializer, BattleSerializer,
     CardsCoinsSerializer, StartBattleRequestSerializer,
     BattleResultsRequestSerializer, BattleResultSerializer,
     LeaderboardRequestSerializer, BattleLeaderSerializer,
-    MyLeaderboardRequestSerializer, CardCreatorLeaderSerializer
+    MyLeaderboardRequestSerializer, CardCreatorLeaderSerializer,
+    AddLikeCardSerializer, RemoveLikeCardSerializer
 )
 
 
@@ -212,3 +213,34 @@ class CreatorsLeaderboardView(LeaderboardView):
 class MyCreatorsLeaderboardView(MyLeaderboardView):
     leaders_serializer = CardCreatorLeaderSerializer
     ordering_field = 'creator_rating'
+
+
+class LikeCardView(APIView):
+    def post(self, request):
+        # TODO везде поставить контекст
+        serializer = getattr(self, 'request_serializer')(
+            data=request.data, context={'user': request.user.cardsuser}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        card_design_id = serializer.data['card_design_id']
+        getattr(self, 'process_likes')(
+            request,
+            CardDesign.objects.get(card_design_id=card_design_id).likes
+        )
+        return Response()
+
+
+class AddLikeCardView(LikeCardView):
+    request_serializer = AddLikeCardSerializer
+
+    def process_likes(self, request, likes):
+        likes.add(request.user.cardsuser)
+
+
+class RemoveLikeCardView(LikeCardView):
+    request_serializer = RemoveLikeCardSerializer
+
+    def process_likes(self, request, likes):
+        likes.remove(request.user.cardsuser)

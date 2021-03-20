@@ -68,6 +68,8 @@ class CardDesign(models.Model):
         (3, 'Невероятная'),
     ], default=1)
 
+    likes = models.ManyToManyField(CardsUser, related_name='likes', blank=True)
+
     @classmethod
     def upload_image(cls, request, image):
         response = requests.post('https://api.imgbb.com/1/upload', {

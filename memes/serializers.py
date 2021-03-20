@@ -232,3 +232,31 @@ class CardCreatorLeaderSerializer(ModelSerializer):
     class Meta:
         model = CardsUser
         fields = ['user', 'cards_amount']
+
+
+class AddLikeCardSerializer(Serializer):
+    card_design_id = IntegerField(min_value=1)
+
+    def validate_card_design_id(self, card_design_id):
+        if not CardDesign.objects.filter(
+                card_design_id=card_design_id).exists():
+            raise ValidationError('This design does not exist')
+
+        user = self.context['user']
+        if user.likes.filter(card_design_id=card_design_id).exists():
+            raise ValidationError('You had already liked this card')
+        return card_design_id
+
+
+class RemoveLikeCardSerializer(Serializer):
+    card_design_id = IntegerField(min_value=1)
+
+    def validate_card_design_id(self, card_design_id):
+        if not CardDesign.objects.filter(
+                card_design_id=card_design_id).exists():
+            raise ValidationError('This design does not exist')
+
+        user = self.context['user']
+        if not user.likes.filter(card_design_id=card_design_id).exists():
+            raise ValidationError('You had not liked this card')
+        return card_design_id

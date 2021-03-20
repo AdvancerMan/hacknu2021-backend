@@ -4,7 +4,7 @@ from .views import (
     StartBattleView, BattleResultsView, AuthView, StartFindBattleView,
     StopFindBattleView, MatchBattleView, EverydayRewardView,
     MyCreatorsLeaderboardView, CreatorsLeaderboardView, MyBattleLeaderboardView,
-    BattleLeaderboardView
+    BattleLeaderboardView, AddLikeCardView, RemoveLikeCardView
 )
 
 urlpatterns = [
@@ -16,7 +16,11 @@ urlpatterns = [
     path('battle/results', BattleResultsView.as_view()),
     path('battle/leaderboard', BattleLeaderboardView.as_view()),
     path('battle/leaderboard/my', MyBattleLeaderboardView.as_view()),
+
+    path('cards/like/add', AddLikeCardView.as_view()),
+    path('cards/like/remove', RemoveLikeCardView.as_view()),
     path('cards/creators/leaderboard', CreatorsLeaderboardView.as_view()),
     path('cards/creators/leaderboard/my', MyCreatorsLeaderboardView.as_view()),
+
     path('everyday/reward', EverydayRewardView.as_view()),
 ]
