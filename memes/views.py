@@ -20,6 +20,7 @@ from memes.serializers import (
 
 
 class AuthView(TokenObtainPairView):
+    permission_classes = []
     serializer_class = AuthSerializer
 
     def post(self, request, *args, **kwargs):
