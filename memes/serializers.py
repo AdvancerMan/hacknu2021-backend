@@ -1,5 +1,6 @@
 import re
 
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import (
@@ -7,7 +8,7 @@ from rest_framework.serializers import (
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from memes.models import Card, Battle, CardDesign, CardsUser
+from memes.models import Card, Battle, CardDesign, CardsUser, BattleRequest
 
 
 class CardsUserSerializer(ModelSerializer):
@@ -63,20 +64,49 @@ class BattleSerializer(ModelSerializer):
 
     class Meta:
         model = Battle
-        fields = ['battle_id', 'first_card', 'second_card']
+        fields = ['battle_id', 'first_card', 'second_card',
+                  'first_player', 'second_player']
 
 
-class CardIdSerializer(Serializer):
+class StartFindBattleSerializer(Serializer):
     card_id = IntegerField(min_value=1)
 
     def validate_card_id(self, card_id):
-        if not Card.objects.filter(card_id=card_id).exists():
+        card = Card.objects.filter(card_id=card_id).first()
+        if card is None:
             raise ValidationError("Card does not exist")
+
+        if BattleRequest.objects.filter(card__owner=card.owner).exists():
+            raise ValidationError("Can not start many battle "
+                                  "requests at the same time")
+
+        battle = Battle.objects.filter(
+            Q(first_card__card_id=card_id) | Q(second_card__card_id=card_id)
+        ).filter(winner__isnull=True)
+        if battle.exists():
+            raise ValidationError("You can not start findind battle"
+                                  "if you are in another one")
+
         return card_id
 
     def get_card(self):
-        return Card.objects.get(card_id=self.card_id)
+        return Card.objects.get(card_id=self.validated_data['card_id'])
+
+
+class StopFindBattleSerializer(StartFindBattleSerializer):
+    def validate_card_id(self, card_id):
+        if not BattleRequest.objects.filter(card_id=card_id).exists():
+            raise ValidationError("There is no battle request with this card")
+        return card_id
 
 
 class MatchPostRequestSerializer(Serializer):
     max_delta = IntegerField(min_value=0)
+    user_id = IntegerField(min_value=1)
+
+    def validate(self, attrs):
+        user_id = attrs['user_id']
+        if not BattleRequest.objects.filter(
+                card__owner__cards_user_id=user_id).exists():
+            raise ValidationError("There is no battle request with you")
+        return attrs

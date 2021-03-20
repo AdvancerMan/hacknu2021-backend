@@ -9,7 +9,7 @@ import json
 
 class CardsUser(models.Model):
     cards_user_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     coins = models.PositiveIntegerField(default=0)
     battle_rating = models.IntegerField(default=0)
     creator_rating = models.IntegerField(default=0)
