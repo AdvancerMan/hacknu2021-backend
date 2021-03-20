@@ -2,11 +2,7 @@ import pytz
 import random
 
 from django.db import models
-from rest_framework.exceptions import server_error
 from django.contrib.auth.models import User
-from hacknu.settings import IMAGE_STORAGE_KEY
-import requests
-import json
 import datetime
 
 
@@ -69,17 +65,6 @@ class CardDesign(models.Model):
     ], default=1)
 
     likes = models.ManyToManyField(CardsUser, related_name='likes', blank=True)
-
-    @classmethod
-    def upload_image(cls, request, image):
-        response = requests.post('https://api.imgbb.com/1/upload', {
-            'key': IMAGE_STORAGE_KEY,
-            'image': image
-        })
-
-        if response.status_code != 200:
-            server_error(request)
-        return json.loads(response.text)['data']['url']
 
 
 class Card(models.Model):

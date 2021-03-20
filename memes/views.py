@@ -1,5 +1,7 @@
+import json
 import random
 
+import requests
 from django.contrib.auth.models import User
 from django.db.models import F, Q
 from django.db.models.functions import Abs
@@ -8,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from hacknu.settings import IMAGE_STORAGE_KEY
 from memes.models import CardsUser, BattleRequest, Battle, CardDesign
 from memes.serializers import (
     AuthSerializer, CardSerializer, StartFindBattleSerializer,
@@ -16,7 +19,7 @@ from memes.serializers import (
     BattleResultsRequestSerializer, BattleResultSerializer,
     LeaderboardRequestSerializer, BattleLeaderSerializer,
     MyLeaderboardRequestSerializer, CardCreatorLeaderSerializer,
-    AddLikeCardSerializer, RemoveLikeCardSerializer
+    AddLikeCardSerializer, RemoveLikeCardSerializer, CardDesignSerializer
 )
 
 
@@ -243,3 +246,30 @@ class RemoveLikeCardView(LikeCardView):
 
     def process_likes(self, request, likes):
         likes.remove(request.user.cardsuser)
+
+
+class CreateCardView(APIView):
+    def post(self, request):
+        image_base64 = request.data.get('image_base64')
+        if image_base64 is None:
+            return Response({'image_base64': 'This field is required'},
+                            status=400)
+
+        response = requests.post('https://api.imgbb.com/1/upload', {
+            'key': IMAGE_STORAGE_KEY,
+            'image': image_base64
+        })
+        imgbb_response = json.loads(response.text)
+
+        if response.status_code != 200:
+            return Response({'image_base64': [
+                imgbb_response['error']['message']
+            ]}, status=response.status_code)
+
+        url = imgbb_response['data']['url']
+        url = url.replace('https:', '').replace('http:', '')
+
+        card_design = CardDesign.objects.create(
+            creator=request.user.cardsuser, image_url=url
+        )
+        return Response(CardDesignSerializer(card_design).data)
