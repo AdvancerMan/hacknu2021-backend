@@ -20,7 +20,9 @@ class CardsUser(models.Model):
     battle_count = models.PositiveIntegerField(default=0)
     win_count = models.PositiveIntegerField(default=0)
 
-    last_everyday_reward = models.DateTimeField()
+    last_everyday_reward = models.DateTimeField(default=datetime.datetime(
+        1, 1, 1, tzinfo=pytz.utc
+    ))
 
     @property
     def creator_rank(self):
