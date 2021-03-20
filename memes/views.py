@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.auth.models import User
 from django.db.models import F
 from django.db.models.functions import Abs
@@ -10,7 +12,8 @@ from memes.models import CardsUser, BattleRequest, Battle
 from memes.serializers import (
     AuthSerializer, CardSerializer, StartFindBattleSerializer,
     StopFindBattleSerializer,
-    MatchPostRequestSerializer, BattleSerializer
+    MatchPostRequestSerializer, BattleSerializer, StartBattleRequestSerializer,
+    BattleResultsRequestSerializer, BattleResultSerializer
 )
 
 
@@ -75,7 +78,7 @@ class MatchBattleView(APIView):
             pair_request = BattleRequest.objects.exclude(
                 card=b_request.card
             ).annotate(
-                delta=Abs(F('card__strength') - b_request.card.strength)
+                delta=Abs(F('card__power') - b_request.card.power)
             ).filter(delta__lte=max_delta).order_by('delta').first()
 
             if pair_request is None:
@@ -91,3 +94,51 @@ class MatchBattleView(APIView):
         b_request.delete()
         result_ser = BattleSerializer(battle)
         return result_ser.data
+
+
+class StartBattleView(APIView):
+    def post(self, request):
+        serializer = StartBattleRequestSerializer(data={
+            'user_id': request.user.cardsuser.cards_user_id, **request.data
+        })
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        battle = Battle.objects.get(battle_id=serializer.data['battle_id'])
+        mini_game_choice = serializer.data['mini_game_choice']
+
+        if mini_game_choice == -1:
+            power_delta = 0
+        else:
+            power_delta = 1 if random.randint(1, 3) == 1 else -1
+            # TODO maybe max delta depends on card power
+            power_delta *= random.randint(1, 10)
+
+        if battle.first_card.owner == request.user.cardsuser:
+            battle.first_power_delta = power_delta
+        else:
+            battle.second_power_delta = power_delta
+
+        if (battle.first_power_delta is not None
+                and battle.second_power_delta is not None):
+            battle.finish()
+        else:
+            battle.save()
+
+        return Response({'power_delta': power_delta})
+
+
+class BattleResultsView(APIView):
+    def get(self, request):
+        serializer = BattleResultsRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        battle = Battle.objects.get(battle_id=serializer.data['battle_id'])
+        return Response(
+            {
+                'result': None if battle.winner is None
+                else BattleResultSerializer(
+                    battle, context={'user': request.user.cardsuser}
+                ).data
+            }
+        )

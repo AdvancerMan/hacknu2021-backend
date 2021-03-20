@@ -47,7 +47,7 @@ class CardSerializer(ModelSerializer):
 
     class Meta:
         model = Card
-        fields = ['card_id', 'strength', 'rarity', 'card_design']
+        fields = ['card_id', 'power', 'rarity', 'card_design']
 
 
 class BattleSerializer(ModelSerializer):
@@ -110,3 +110,73 @@ class MatchPostRequestSerializer(Serializer):
                 card__owner__cards_user_id=user_id).exists():
             raise ValidationError("There is no battle request with you")
         return attrs
+
+
+class StartBattleRequestSerializer(Serializer):
+    user_id = IntegerField(min_value=1)
+    battle_id = IntegerField(min_value=1)
+    mini_game_choice = IntegerField()
+
+    def validate_battle_id(self, battle_id):
+        battle = Battle.objects.filter(battle_id=battle_id).first()
+        if battle is None:
+            raise ValidationError("There is no battle with this id")
+        if battle.finished:
+            raise ValidationError("Battle has already been finished")
+        return battle_id
+
+    def validate_mini_game_choice(self, mini_game_choice):
+        if mini_game_choice not in range(-1, 3):
+            raise ValidationError("Should one of {-1, 0, 1, 2}")
+        return mini_game_choice
+
+    def validate(self, attrs):
+        user_id = attrs['user_id']
+        battle = Battle.objects.get(battle_id=attrs['battle_id'])
+        if user_id not in [battle.first_card.owner.cards_user_id,
+                           battle.second_card.owner.cards_user_id]:
+            raise ValidationError("You did not join this battle")
+        return attrs
+
+
+class BattleResultsRequestSerializer(Serializer):
+    battle_id = IntegerField(min_value=1)
+
+    def validate_battle_id(self, battle_id):
+        battle = Battle.objects.filter(battle_id=battle_id).first()
+        if battle is None:
+            raise ValidationError("There is no battle with this id")
+        return battle_id
+
+
+class BattleResultSerializer(ModelSerializer):
+    winner = CardsUserSerializer()
+    coins_prize = SerializerMethodField()
+    power_prize = SerializerMethodField()
+    card_prize = SerializerMethodField()
+    delta_rating = SerializerMethodField()
+
+    def get_coins_prize(self, battle):
+        return battle.coins_prize \
+            if self.context['user'] == battle.winner else 0
+
+    def get_power_prize(self, battle):
+        return (battle.first_power_prize
+                if self.context['user'] == battle.first_card.owner
+                else battle.second_power_prize)
+
+    def get_card_prize(self, battle):
+        return (CardSerializer(battle.card_prize).data
+                if self.context['user'] == battle.winner
+                   and battle.card_prize is not None
+                else None)
+
+    def get_delta_rating(self, battle):
+        return (battle.first_delta_rating
+                if self.context['user'] == battle.first_card.owner
+                else battle.second_delta_rating)
+
+    class Meta:
+        model = Battle
+        fields = ['winner', 'coins_prize', 'power_prize',
+                  'card_prize', 'delta_rating']
