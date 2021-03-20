@@ -126,11 +126,14 @@ class Battle(models.Model):
             self.first_delta_rating = -1
             self.second_delta_rating = 1
 
+        self.winner.win_count += 1
         self.winner.coins += self.coins_prize
         self.first_card.power += self.first_power_prize
         self.second_card.power += self.second_power_prize
         first.battle_rating += self.first_delta_rating
         second.battle_rating += self.second_delta_rating
+        first.battle_count += 1
+        second.battle_count += 1
 
         self.save()
         first.save()
