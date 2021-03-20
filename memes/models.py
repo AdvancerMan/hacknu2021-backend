@@ -17,10 +17,19 @@ class CardsUser(models.Model):
     battle_count = models.PositiveIntegerField()
     win_count = models.PositiveIntegerField()
 
+    @property
+    def creator_rank(self):
+        return 'TODO'  # TODO
+
 
 class CardDesign(models.Model):
     card_design_id = models.PositiveIntegerField(primary_key=True)
     image_url = models.URLField()
+    popularity = models.TextField(choices=[
+        (1, 'Обычная'),
+        (2, 'Редкая'),
+        (3, 'Невероятная'),
+    ], default=1)
 
     @classmethod
     def upload_image(cls, request, image):
