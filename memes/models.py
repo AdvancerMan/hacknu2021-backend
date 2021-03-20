@@ -43,7 +43,7 @@ class CardsUser(models.Model):
 class CardDesign(models.Model):
     card_design_id = models.BigAutoField(primary_key=True)
     image_url = models.URLField()
-    popularity = models.TextField(choices=[
+    popularity = models.IntegerField(choices=[
         (1, 'Обычная'),
         (2, 'Редкая'),
         (3, 'Невероятная'),
@@ -84,3 +84,5 @@ class Battle(models.Model):
 
 class BattleRequest(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    battle = models.ForeignKey(Battle, null=True, blank=True, default=None,
+                               on_delete=models.CASCADE,)
