@@ -60,11 +60,11 @@ class CardDesignSerializer(ModelSerializer):
 
 
 class CardSerializer(ModelSerializer):
-    card_design = SerializerMethodField()
+    design = CardDesignSerializer()
 
     class Meta:
         model = Card
-        fields = ['card_id', 'power', 'rarity', 'card_design']
+        fields = ['card_id', 'power', 'rarity', 'design']
 
 
 class BattleSerializer(ModelSerializer):

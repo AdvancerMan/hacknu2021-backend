@@ -66,10 +66,14 @@ class CardsUser(models.Model):
     def add_intro_reward(self):
         self.last_everyday_reward = datetime.datetime.now(pytz.utc)
         self.coins += 100
-        # TODO add cards
-        # self.card_set.add(
-        #
-        # )
+
+        for design in CardDesign.objects.filter(intro_card_design=True):
+            Card.objects.create(
+                design=design,
+                rarity=1,
+                power=100,
+                owner=self
+            )
         self.save()
 
 
@@ -84,6 +88,7 @@ class CardDesign(models.Model):
     ], default=1)
 
     likes = models.ManyToManyField(CardsUser, related_name='likes', blank=True)
+    intro_card_design = models.BooleanField(default=False)
 
 
 class Card(models.Model):
