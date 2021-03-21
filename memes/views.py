@@ -36,7 +36,7 @@ class AuthView(TokenObtainPairView):
             user = CardsUser.register(
                 request.data['username'], request.data['password'],
                 request.data.get('first_name', ''),
-                request.data.get('second_name', '')
+                request.data.get('last_name', '')
             )
             response = super(AuthView, self).post(request, *args, **kwargs)
             response.data['registered'] = True
