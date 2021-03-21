@@ -146,7 +146,7 @@ class StartBattleView(APIView):
 
 class BattleResultsView(APIView):
     def get(self, request):
-        serializer = BattleResultsRequestSerializer(data=request.data)
+        serializer = BattleResultsRequestSerializer(data=request.query_params)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         battle = Battle.objects.get(battle_id=serializer.data['battle_id'])
@@ -176,7 +176,7 @@ class LeaderboardView(APIView):
         })
 
     def get(self, request):
-        serializer = LeaderboardRequestSerializer(data=request.data)
+        serializer = LeaderboardRequestSerializer(data=request.query_params)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
@@ -187,7 +187,7 @@ class LeaderboardView(APIView):
 
 class MyLeaderboardView(LeaderboardView):
     def get(self, request):
-        serializer = MyLeaderboardRequestSerializer(data=request.data)
+        serializer = MyLeaderboardRequestSerializer(data=request.query_params)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
